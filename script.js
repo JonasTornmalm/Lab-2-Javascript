@@ -40,7 +40,7 @@ class UI
         .then((responseData) => {
             console.log(responseData);
             if(responseData.status === 'success'){
-                UI.showAlert('Success!', 'success');
+                UI.showAlert('Book list refreshed!', 'success');
                 responseData.data.forEach(function(book) {
                     UI.addBookToList(book)
                 });
@@ -68,22 +68,25 @@ class UI
         bookList.appendChild(bookListRow);
     }
 
-    static deleteBook(el) {
+    static deleteBook(el, n) {
         if(el.classList.contains('delete')) {
-
             fetch(viewRequest)
             .then((response) => response.json())
             .then((responseData) => {
                 if(responseData.status === 'success'){
                     responseData.data.forEach(function(obj) {
-                        Store.deleteBookInStorage(obj.id);
-                        
-                        el.parentElement.parentElement.remove();
+                        let td = el.parentElement.parentElement;
+                        if(obj.title === td.childNodes[1].textContent){
+                            td.remove();
+                            return Store.deleteBookInStorage(obj.id, 10);
+                        }
                     })
                 }
+                else if(n >= 1){
+                    return n * UI.deleteBook(el, n - 1);
+                }
                 else {
-                    console.log('failed, trying again');
-                    UI.deleteBook(el);
+                    UI.showAlert('Failed to delete book', 'danger');
                 }
             });
 
@@ -116,38 +119,40 @@ class UI
 
 class Store {
 
-    static addBookToStorage(book) {
+    static addBookToStorage(book, n) {
 
         const addRequest = baseUrl + '&op=insert&title=' + book.title + '&author=' + book.author;
-        let counter = 0;
 
         fetch(addRequest)
         .then((response) => response.json())
         .then((responseData) => {
-            console.log(responseData);
             if(responseData.status === 'success'){
-                console.log('success');
+                UI.showAlert('Book has been added.', 'success');
                 UI.addBookToList(book);
             }
-            else if (counter < 11){
-                counter++;
-                console.log('failed, try to add again');
-                Store.addBookToStorage(book);
+            else if (n >= 1){
+                return n * Store.addBookToStorage(book, n - 1);
+            }
+            else{
+                UI.showAlert('Failed to store book.', 'danger');
             }
         });
     }
 
 
-    static deleteBookInStorage(id) {
+    static deleteBookInStorage(id, n) {
 
         fetch(deleteRequest + id)
         .then((response) => response.json())
         .then((responseData) => {
             if(responseData.status === 'success'){
-                console.log(responseData);
+                UI.showAlert('Book deleted!', 'success');
             }
-            else {
-                console.log('failed');
+            else if(n >= 1) {
+                return n * Store.deleteBookInStorage(id, n - 1);
+            }
+            else{
+                UI.showAlert('Failed to delete book from storage.', 'danger');
             }
         });
 
@@ -167,7 +172,7 @@ document.querySelector('#book-form').addEventListener('submit', (e) => {
         UI.showAlert('Make sure you fill in both fields.', 'danger');
     } else{
         const book = new Book(title, author);
-        Store.addBookToStorage(book);
+        Store.addBookToStorage(book, 10);
         UI.clearFields();
     }
 })
@@ -189,5 +194,5 @@ document.getElementById('getBookList').addEventListener('click', (e) => {
 // Delete data
 
 document.querySelector('#book-list').addEventListener('click', (e) => {
-    UI.deleteBook(e.target);
+    UI.deleteBook(e.target, 10);
 })
