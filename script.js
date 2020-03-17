@@ -60,8 +60,8 @@ class UI
             
             let td = el.parentElement.parentElement;
             
-            let previousBookTitle = td.childNodes[1].textContent;
-            let previousBookAuthor = td.childNodes[3].textContent;
+            const previousBookTitle = td.childNodes[1].textContent;
+            const previousBookAuthor = td.childNodes[3].textContent;
             
             let titleInput = document.getElementById('title');
             titleInput.value += `${previousBookTitle}`;
@@ -73,11 +73,16 @@ class UI
             authorInput.focus();
             authorInput.select();
 
+
+            
+            
             document.getElementById('insertBook').addEventListener('click', (e) => {
                 e.preventDefault();
                 let newBookTitle = titleInput.value;
                 let newBookAuthor = authorInput.value;
-                UI.clearFields();
+                console.log(previousBookTitle);
+                console.log(newBookTitle);
+                console.log(newBookAuthor);
                 UI.editBookConfirmed(previousBookTitle, newBookTitle, newBookAuthor, 10);
                 addBookInput.value = 'Add Book';
             });
@@ -86,6 +91,9 @@ class UI
     }
 
     static editBookConfirmed(previousBookTitle, newBookTitle, newBookAuthor, n) {
+        console.log(previousBookTitle);
+        console.log(newBookTitle);
+        console.log(newBookAuthor);
         fetch(viewRequest)
         .then((response) => response.json())
         .then((responseData) => {
@@ -182,6 +190,7 @@ class Store {
         .then((responseData) => {
             if(responseData.status === 'success'){
                 UI.showAlert('Book updated!', 'success');
+                UI.clearFields();
             }
             else if(n >= 1) {
                 return n * Store.editBookInStorage(id, newBookTitle, newBookAuthor, n - 1);
