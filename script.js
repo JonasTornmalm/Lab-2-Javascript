@@ -28,6 +28,7 @@ class UI
                 responseData.data.forEach(function(book) {
                     UI.addBookToList(book)
                 });
+                console.log(responseData.data);
             }
             else if(n >= 1){
                 return n * UI.refreshBookList(n - 1);
@@ -52,64 +53,56 @@ class UI
         bookList.appendChild(bookListRow);
     }
 
-    static editBook(el, n) {
+    static editBook(el) {
         if(el.classList.contains('edit')){
+            let addBookInput = document.getElementById('insertBook');
+            addBookInput.value = 'Confirm';
+            
             let td = el.parentElement.parentElement;
             
-            let bookTitle = td.childNodes[1].textContent;
-            let bookAuthor = td.childNodes[3].textContent;
+            let previousBookTitle = td.childNodes[1].textContent;
+            let previousBookAuthor = td.childNodes[3].textContent;
             
             let titleInput = document.getElementById('title');
-            titleInput.value += `${bookTitle}`;
+            titleInput.value += `${previousBookTitle}`;
             titleInput.focus();
             titleInput.select();
 
             let authorInput = document.getElementById('author');
-            authorInput.value += `${bookAuthor}`;
+            authorInput.value += `${previousBookAuthor}`;
             authorInput.focus();
             authorInput.select();
 
-            let addBookInput = document.getElementById('insertBook');
-            addBookInput.value = 'Confirm';
-
             document.getElementById('insertBook').addEventListener('click', (e) => {
-                if(addBookInput.value === 'Confirm'){
-                    if(el.classList.contains('edit')) {
-                        fetch(viewRequest)
-                        .then((response) => response.json())
-                        .then((responseData) => {
-                            if(responseData.status === 'success'){
-                                responseData.data.forEach(function(obj) {
-                                    if(obj.title === bookTitle){
-                                        return Store.editBookInStorage(obj.id, obj.title, obj.author, 10);
-                                    }
-                                })
-                            }
-                            else if(n >= 1){
-                                return n * UI.editBook(el, n - 1);
-                            }
-                            else {
-                                UI.showAlert('Failed to edit book', 'danger');
-                            }
-                        });
-                    }
-                }
+                e.preventDefault();
+                let newBookTitle = titleInput.value;
+                let newBookAuthor = authorInput.value;
+                UI.clearFields();
+                UI.editBookConfirmed(previousBookTitle, newBookTitle, newBookAuthor, 10);
+                addBookInput.value = 'Add Book';
             });
 
-            let newBookTitle;
-            let newBookAuthor;
-
-            const bookList = document.querySelector('#book-list');
-
-            td.innerHTML = `
-                <td>${newBookTitle}</td>
-                <td>${newBookAuthor}</td>
-                <td><a href="#" class="edit">Edit</td>
-                <td><a href="#" class="delete">X</td>
-            `;
-            bookList.appendChild(td);
-
         }
+    }
+
+    static editBookConfirmed(previousBookTitle, newBookTitle, newBookAuthor, n) {
+        fetch(viewRequest)
+        .then((response) => response.json())
+        .then((responseData) => {
+            if(responseData.status === 'success'){
+                responseData.data.forEach(function(obj) {
+                    if(obj.title === previousBookTitle){
+                        return Store.editBookInStorage(obj.id, newBookTitle, newBookAuthor, 10);
+                    }
+                })
+            }
+            else if(n >= 1){
+                return n * UI.editBookConfirmed(previousBookTitle, newBookTitle, newBookAuthor, n - 1);
+            }
+            else {
+                UI.showAlert('Failed to edit book', 'danger');
+            }
+        });
     }
 
     static deleteBook(el, n) {
@@ -181,10 +174,22 @@ class Store {
         });
     }
 
-    static editBookInStorage(id, title, author, n) {
+    static editBookInStorage(id, newBookTitle, newBookAuthor, n) {
 
-        const updateRequest = baseUrl + '&op=update&id=' + id + '&title=' + book.author;
-
+        const updateRequest = baseUrl + '&op=update&id=' + id + '&title=' + newBookTitle + '&author=' + newBookAuthor;
+        fetch(updateRequest)
+        .then((response) => response.json())
+        .then((responseData) => {
+            if(responseData.status === 'success'){
+                UI.showAlert('Book updated!', 'success');
+            }
+            else if(n >= 1) {
+                return n * Store.editBookInStorage(id, newBookTitle, newBookAuthor, n - 1);
+            }
+            else{
+                UI.showAlert('Failed to update book from storage.', 'danger');
+            }
+        })
     }
 
 
@@ -236,7 +241,7 @@ document.getElementById('getBookList').addEventListener('click', (e) => {
 // Modify data
 
 document.querySelector('#book-list').addEventListener('click', (e) => {
-    UI.editBook(e.target, 10);
+    UI.editBook(e.target);
 })
 
 // Delete data
