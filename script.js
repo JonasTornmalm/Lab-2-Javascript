@@ -4,7 +4,6 @@ let key = '2GRpb';
 const baseUrl = 'https://www.forverkliga.se/JavaScript/api/crud.php?key=' + key;
 const selectParam = '&op=select';
 const deleteParam = '&op=delete&id=';
-const modifyParam = '&op=update';
 
 const deleteRequest = baseUrl + deleteParam;
 const viewRequest = baseUrl + selectParam;
@@ -24,7 +23,6 @@ class UI
         fetch(viewRequest)
         .then((response) => response.json())
         .then((responseData) => {
-            console.log(responseData);
             if(responseData.status === 'success'){
                 UI.showAlert('Book list refreshed!', 'success');
                 responseData.data.forEach(function(book) {
@@ -61,6 +59,42 @@ class UI
             let bookTitle = td.childNodes[1].textContent;
             let bookAuthor = td.childNodes[3].textContent;
             
+            let titleInput = document.getElementById('title');
+            titleInput.value += `${bookTitle}`;
+            titleInput.focus();
+            titleInput.select();
+
+            let authorInput = document.getElementById('author');
+            authorInput.value += `${bookAuthor}`;
+            authorInput.focus();
+            authorInput.select();
+
+            let addBookInput = document.getElementById('insertBook');
+            addBookInput.value = 'Confirm';
+
+            document.getElementById('insertBook').addEventListener('click', (e) => {
+                if(addBookInput.value === 'Confirm'){
+                    if(el.classList.contains('edit')) {
+                        fetch(viewRequest)
+                        .then((response) => response.json())
+                        .then((responseData) => {
+                            if(responseData.status === 'success'){
+                                responseData.data.forEach(function(obj) {
+                                    if(obj.title === bookTitle){
+                                        return Store.editBookInStorage(obj.id, obj.title, obj.author, 10);
+                                    }
+                                })
+                            }
+                            else if(n >= 1){
+                                return n * UI.editBook(el, n - 1);
+                            }
+                            else {
+                                UI.showAlert('Failed to edit book', 'danger');
+                            }
+                        });
+                    }
+                }
+            });
 
             let newBookTitle;
             let newBookAuthor;
@@ -147,6 +181,12 @@ class Store {
         });
     }
 
+    static editBookInStorage(id, title, author, n) {
+
+        const updateRequest = baseUrl + '&op=update&id=' + id + '&title=' + book.author;
+
+    }
+
 
     static deleteBookInStorage(id, n) {
         fetch(deleteRequest + id)
@@ -170,16 +210,18 @@ class Store {
 
 document.querySelector('#book-form').addEventListener('submit', (e) => {
     e.preventDefault();
-
-    const title = document.querySelector('#title').value;
-    const author = document.querySelector('#author').value;
-
-    if(title === '' || author === ''){
-        UI.showAlert('Make sure you fill in both fields.', 'danger');
-    } else{
-        const book = new Book(title, author);
-        Store.addBookToStorage(book, 10);
-        UI.clearFields();
+    let addInputValue = document.getElementById('insertBook');
+    if(addInputValue.value === 'Add Book'){
+        const title = document.querySelector('#title').value;
+        const author = document.querySelector('#author').value;
+    
+        if(title === '' || author === ''){
+            UI.showAlert('Make sure you fill in both fields.', 'danger');
+        } else{
+            const book = new Book(title, author);
+            Store.addBookToStorage(book, 10);
+            UI.clearFields();
+        }
     }
 })
 
