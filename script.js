@@ -9,19 +9,6 @@ const modifyParam = '&op=update';
 const deleteRequest = baseUrl + deleteParam;
 const viewRequest = baseUrl + selectParam;
 
-
-/*
-fetch(viewRequest)
-.then((response) => {
-return response.json();
-})
-.then((data) => {
-console.log(data);
-});
-*/
-
-// Book class
-
 class Book {
     constructor(title, author){
         this.title = title;
@@ -34,7 +21,6 @@ class Book {
 class UI
 {
     static refreshBookList(n){
-        
         fetch(viewRequest)
         .then((response) => response.json())
         .then((responseData) => {
@@ -52,7 +38,6 @@ class UI
                 UI.showAlert('Could not load the list', 'danger');
             }
         });
-
     }
     static addBookToList(book) {
         const bookList = document.querySelector('#book-list');
@@ -62,10 +47,35 @@ class UI
         bookListRow.innerHTML = `
             <td>${book.title}</td>
             <td>${book.author}</td>
+            <td><a href="#" class="edit">Edit</td>
             <td><a href="#" class="delete">X</td>
         `;
 
         bookList.appendChild(bookListRow);
+    }
+
+    static editBook(el, n) {
+        if(el.classList.contains('edit')){
+            let td = el.parentElement.parentElement;
+            
+            let bookTitle = td.childNodes[1].textContent;
+            let bookAuthor = td.childNodes[3].textContent;
+            
+
+            let newBookTitle;
+            let newBookAuthor;
+
+            const bookList = document.querySelector('#book-list');
+
+            td.innerHTML = `
+                <td>${newBookTitle}</td>
+                <td>${newBookAuthor}</td>
+                <td><a href="#" class="edit">Edit</td>
+                <td><a href="#" class="delete">X</td>
+            `;
+            bookList.appendChild(td);
+
+        }
     }
 
     static deleteBook(el, n) {
@@ -89,7 +99,6 @@ class UI
                     UI.showAlert('Failed to delete book', 'danger');
                 }
             });
-
         }
     }
 
@@ -118,7 +127,6 @@ class UI
 // Store Class: Handles Storage
 
 class Store {
-
     static addBookToStorage(book, n) {
 
         const addRequest = baseUrl + '&op=insert&title=' + book.title + '&author=' + book.author;
@@ -141,7 +149,6 @@ class Store {
 
 
     static deleteBookInStorage(id, n) {
-
         fetch(deleteRequest + id)
         .then((response) => response.json())
         .then((responseData) => {
@@ -155,7 +162,6 @@ class Store {
                 UI.showAlert('Failed to delete book from storage.', 'danger');
             }
         });
-
     }
 }
 
@@ -179,8 +185,6 @@ document.querySelector('#book-form').addEventListener('submit', (e) => {
 
 // View data
 
-
-
 document.getElementById('getBookList').addEventListener('click', (e) => {
     e.preventDefault();
     UI.clearBookListField();
@@ -189,7 +193,9 @@ document.getElementById('getBookList').addEventListener('click', (e) => {
 
 // Modify data
 
-
+document.querySelector('#book-list').addEventListener('click', (e) => {
+    UI.editBook(e.target, 10);
+})
 
 // Delete data
 
