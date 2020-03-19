@@ -1,12 +1,36 @@
 // Database API
 
-let key = '2GRpb'; 
-const baseUrl = 'https://www.forverkliga.se/JavaScript/api/crud.php?key=' + key;
+// let key = '2GRpb'; 
+let key;
+const baseUrl = 'https://www.forverkliga.se/JavaScript/api/crud.php?key=';
+const titleParam = '&title=';
+const authorParam = '&author='
+const insertParam = '&op=insert'
+const updateParam = '&op=update&id='
 const selectParam = '&op=select';
 const deleteParam = '&op=delete&id=';
 
-const deleteRequest = baseUrl + deleteParam;
-const viewRequest = baseUrl + selectParam;
+window.onload = fetchApiKey();
+
+function fetchApiKey () {
+    const requestKeyUrl = 'https://www.forverkliga.se/JavaScript/api/crud.php?requestKey';
+    fetch(requestKeyUrl)
+    .then((response) => response.json())
+    .then((responseData) => {
+        key = responseData.key;
+        printKey();
+    });
+}
+
+function printKey() {
+    let output = document.getElementById('output');
+
+    output.innerHTML = `
+    Connected to API key: ${key}
+    `;
+}
+
+// Book Class
 
 class Book {
     constructor(title, author){
@@ -20,6 +44,7 @@ class Book {
 class UI
 {
     static refreshBookList(n){
+        let viewRequest = baseUrl + key + selectParam;
         fetch(viewRequest)
         .then((response) => response.json())
         .then((responseData) => {
@@ -28,7 +53,6 @@ class UI
                 responseData.data.forEach(function(book) {
                     UI.addBookToList(book)
                 });
-                console.log(responseData.data);
             }
             else if(n >= 1){
                 return n * UI.refreshBookList(n - 1);
@@ -73,16 +97,11 @@ class UI
             authorInput.focus();
             authorInput.select();
 
-
-            
-            
             document.getElementById('insertBook').addEventListener('click', (e) => {
                 e.preventDefault();
                 let newBookTitle = titleInput.value;
                 let newBookAuthor = authorInput.value;
-                console.log(previousBookTitle);
-                console.log(newBookTitle);
-                console.log(newBookAuthor);
+
                 UI.editBookConfirmed(previousBookTitle, newBookTitle, newBookAuthor, 10);
                 addBookInput.value = 'Add Book';
             });
@@ -91,9 +110,7 @@ class UI
     }
 
     static editBookConfirmed(previousBookTitle, newBookTitle, newBookAuthor, n) {
-        console.log(previousBookTitle);
-        console.log(newBookTitle);
-        console.log(newBookAuthor);
+        let viewRequest = baseUrl + key + selectParam;
         fetch(viewRequest)
         .then((response) => response.json())
         .then((responseData) => {
@@ -115,6 +132,7 @@ class UI
 
     static deleteBook(el, n) {
         if(el.classList.contains('delete')) {
+            let viewRequest = baseUrl + key + selectParam;
             fetch(viewRequest)
             .then((response) => response.json())
             .then((responseData) => {
@@ -163,9 +181,7 @@ class UI
 
 class Store {
     static addBookToStorage(book, n) {
-
-        const addRequest = baseUrl + '&op=insert&title=' + book.title + '&author=' + book.author;
-
+        const addRequest = baseUrl + key + insertParam + titleParam + book.title + authorParam + book.author;
         fetch(addRequest)
         .then((response) => response.json())
         .then((responseData) => {
@@ -183,8 +199,7 @@ class Store {
     }
 
     static editBookInStorage(id, newBookTitle, newBookAuthor, n) {
-
-        const updateRequest = baseUrl + '&op=update&id=' + id + '&title=' + newBookTitle + '&author=' + newBookAuthor;
+        const updateRequest = baseUrl + key + updateParam + id + titleParam + newBookTitle + authorParam + newBookAuthor;
         fetch(updateRequest)
         .then((response) => response.json())
         .then((responseData) => {
@@ -203,6 +218,7 @@ class Store {
 
 
     static deleteBookInStorage(id, n) {
+        let deleteRequest = baseUrl + key + deleteParam;
         fetch(deleteRequest + id)
         .then((response) => response.json())
         .then((responseData) => {
@@ -220,7 +236,7 @@ class Store {
 }
 
 
-// Add data
+// Create data
 
 document.querySelector('#book-form').addEventListener('submit', (e) => {
     e.preventDefault();
@@ -239,7 +255,7 @@ document.querySelector('#book-form').addEventListener('submit', (e) => {
     }
 })
 
-// View data
+// Read data
 
 document.getElementById('getBookList').addEventListener('click', (e) => {
     e.preventDefault();
@@ -247,7 +263,7 @@ document.getElementById('getBookList').addEventListener('click', (e) => {
     UI.refreshBookList(10);
 });
 
-// Modify data
+// Update data
 
 document.querySelector('#book-list').addEventListener('click', (e) => {
     UI.editBook(e.target);
@@ -258,3 +274,9 @@ document.querySelector('#book-list').addEventListener('click', (e) => {
 document.querySelector('#book-list').addEventListener('click', (e) => {
     UI.deleteBook(e.target, 10);
 })
+
+// fetch api key
+
+document.querySelector('#fetchNewKey').addEventListener('click', (e) => {
+    fetchApiKey();
+});
