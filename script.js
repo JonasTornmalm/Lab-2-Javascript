@@ -1,6 +1,5 @@
 // Database API
 
-// let key = '2GRpb'; 
 let key;
 const baseUrl = 'https://www.forverkliga.se/JavaScript/api/crud.php?key=';
 const titleParam = '&title=';
@@ -55,7 +54,7 @@ class UI
                 });
             }
             else if(n >= 1){
-                return n * UI.refreshBookList(n - 1);
+                return UI.refreshBookList(n - 1);
             }
             else{
                 UI.showAlert('Could not load the list', 'danger');
@@ -97,14 +96,13 @@ class UI
             authorInput.focus();
             authorInput.select();
 
-            document.getElementById('insertBook').addEventListener('click', (e) => {
-                e.preventDefault();
+            let confirmButton = document.getElementById('insertBook');
+            confirmButton.onclick = function() {
                 let newBookTitle = titleInput.value;
                 let newBookAuthor = authorInput.value;
 
                 UI.editBookConfirmed(previousBookTitle, newBookTitle, newBookAuthor, 10);
-                addBookInput.value = 'Add Book';
-            });
+            }
 
         }
     }
@@ -122,7 +120,7 @@ class UI
                 })
             }
             else if(n >= 1){
-                return n * UI.editBookConfirmed(previousBookTitle, newBookTitle, newBookAuthor, n - 1);
+                return UI.editBookConfirmed(previousBookTitle, newBookTitle, newBookAuthor, n - 1);
             }
             else {
                 UI.showAlert('Failed to edit book', 'danger');
@@ -146,7 +144,7 @@ class UI
                     })
                 }
                 else if(n >= 1){
-                    return n * UI.deleteBook(el, n - 1);
+                    return UI.deleteBook(el, n - 1);
                 }
                 else {
                     UI.showAlert('Failed to delete book', 'danger');
@@ -190,7 +188,7 @@ class Store {
                 UI.addBookToList(book);
             }
             else if (n >= 1){
-                return n * Store.addBookToStorage(book, n - 1);
+                return Store.addBookToStorage(book, n - 1);
             }
             else{
                 UI.showAlert('Failed to store book.', 'danger');
@@ -205,10 +203,12 @@ class Store {
         .then((responseData) => {
             if(responseData.status === 'success'){
                 UI.showAlert('Book updated!', 'success');
+                let addBookInput = document.getElementById('insertBook');
+                addBookInput.value = 'Add Book';
                 UI.clearFields();
             }
             else if(n >= 1) {
-                return n * Store.editBookInStorage(id, newBookTitle, newBookAuthor, n - 1);
+                return Store.editBookInStorage(id, newBookTitle, newBookAuthor, n - 1);
             }
             else{
                 UI.showAlert('Failed to update book from storage.', 'danger');
@@ -226,7 +226,7 @@ class Store {
                 UI.showAlert('Book deleted!', 'success');
             }
             else if(n >= 1) {
-                return n * Store.deleteBookInStorage(id, n - 1);
+                return Store.deleteBookInStorage(id, n - 1);
             }
             else{
                 UI.showAlert('Failed to delete book from storage.', 'danger');
@@ -275,7 +275,7 @@ document.querySelector('#book-list').addEventListener('click', (e) => {
     UI.deleteBook(e.target, 10);
 })
 
-// fetch api key
+// Request new API Key
 
 document.querySelector('#fetchNewKey').addEventListener('click', (e) => {
     fetchApiKey();
